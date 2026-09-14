@@ -1,11 +1,11 @@
 cask "arras" do
-  version "2.4.4"
-  sha256 "589c34b458823f1f2cc6e56bb2c13ace639c39044b4bb82fdca55277c0fb4df6"
+  version "2.4.7"
+  sha256 "3fc25bc82d775e8dccbd6ee4ab51717cfb2928ee0a666d489a326d2b69a74497"
 
   url "https://github.com/yashashwi-s/Arras/releases/download/v#{version}/Arras.dmg"
   name "Arras"
-  desc "Menu bar agent that pins photos to the desktop as borderless widgets"
-  homepage "https://github.com/yashashwi-s/Arras"
+  desc "Photo widget that preserves each image's original aspect ratio"
+  homepage "https://arras.yashashwi.me/"
 
   livecheck do
     url :url
@@ -15,8 +15,7 @@ cask "arras" do
   # Arras ships its own updater, which replaces Arras.app in place. Left greedy,
   # `brew upgrade` would race it and reinstall a version the app already applied.
   auto_updates true
-  # The release build is thin arm64, so an Intel install would drop in an app that
-  # cannot launch. Refuse up front instead.
+  # Published release artifacts are arm64. Intel remains supported from source.
   depends_on arch: :arm64
   depends_on macos: :sonoma
 
@@ -35,14 +34,19 @@ cask "arras" do
     "~/Library/Preferences/com.yashashwi.tableau.plist",
   ]
 
-  # Arras is ad-hoc signed rather than notarized (Developer ID is $99/year and Arras
-  # is free), so macOS quarantines it and blocks the first launch. Homebrew 6 removed
-  # --no-quarantine, so clearing the flag after install is the only route left.
+  # Arras is ad-hoc signed rather than notarized. Homebrew tap trust verifies the
+  # cask source; it does not change macOS Gatekeeper's assessment of the app.
   caveats <<~EOS
-    Arras is signed to run locally, not notarized, so macOS blocks the first open.
-    Clear the quarantine flag once and it opens normally from then on:
+    Arras is ad-hoc signed and not notarized. Before opening it, verify that this
+    cask came from the official yashashwi-s/tap distribution. Try opening Arras
+    normally first. If macOS blocks it, use System Settings > Privacy & Security >
+    Open Anyway, or right-click Arras in #{appdir}, choose Open, and confirm.
+
+    If those options are unavailable and you trust the official build, remove the
+    quarantine attribute as an explicit fallback:
       xattr -dr com.apple.quarantine "#{appdir}/Arras.app"
 
-    Or right-click Arras in #{appdir}, choose Open, and confirm once.
+    `brew trust yashashwi-s/tap` trusts the Homebrew tap; it does not notarize Arras
+    or bypass Gatekeeper.
   EOS
 end
