@@ -27,6 +27,7 @@ jobs:
 
       - name: Validate synchronized cask
         run: |
+          python3 -m unittest discover -s tests
           python3 scripts/sync_arras.py --check
           ruby -c Casks/arras.rb
           brew tap yashashwi-s/tap "$GITHUB_WORKSPACE"

@@ -25,7 +25,9 @@ USER_AGENT = "homebrew-tap-arras-sync/1"
 ROOT = Path(__file__).resolve().parents[1]
 CASK_PATH = ROOT / "Casks" / "arras.rb"
 README_PATH = ROOT / "README.md"
-VERSION_RE = re.compile(r"v(?P<version>0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\Z")
+VERSION_RE = re.compile(
+    r"v(?P<version>(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\Z"
+)
 SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 
 MACOS_SYMBOLS = {
