@@ -1,0 +1,71 @@
+name: Sync Arras metadata
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-arras-homebrew-metadata
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: macos-15
+    steps:
+      - name: Check out the tap
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Synchronize from the latest stable Arras tag
+        run: python3 scripts/sync_arras.py
+
+      - name: Validate synchronized cask
+        run: |
+          python3 -m unittest discover -s tests
+          python3 scripts/sync_arras.py --check
+          ruby -c Casks/arras.rb
+          brew tap yashashwi-s/tap "$GITHUB_WORKSPACE"
+          brew trust yashashwi-s/tap
+          brew audit --cask --online yashashwi-s/tap/arras
+          brew style Casks/arras.rb
+          brew readall --aliases --syntax yashashwi-s/tap
+          git diff --check
+
+      - name: Create or update the synchronization pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SYNC_BRANCH: automation/sync-arras-metadata
+        run: |
+          if git diff --quiet -- Casks/arras.rb README.md; then
+            echo "Arras metadata is already synchronized."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$SYNC_BRANCH"
+          git add Casks/arras.rb README.md
+          git commit -m "chore: sync Arras Homebrew metadata"
+          if git ls-remote --exit-code --heads origin "$SYNC_BRANCH" >/dev/null; then
+            git fetch origin "refs/heads/$SYNC_BRANCH:refs/remotes/origin/$SYNC_BRANCH"
+          fi
+          git push --force-with-lease origin "HEAD:$SYNC_BRANCH"
+
+          pull_request=$(gh pr list --state open --head "$SYNC_BRANCH" --json number --jq '.[0].number')
+          if [ -n "$pull_request" ]; then
+            gh pr edit "$pull_request" \
+              --title "chore: sync Arras Homebrew metadata" \
+              --body "Synchronizes the Arras cask and README from the latest stable Arras release tag."
+          else
+            gh pr create \
+              --base main \
+              --head "$SYNC_BRANCH" \
+              --title "chore: sync Arras Homebrew metadata" \
+              --body "Synchronizes the Arras cask and README from the latest stable Arras release tag."
+          fi
