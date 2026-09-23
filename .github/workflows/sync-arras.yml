@@ -32,6 +32,11 @@ jobs:
           ruby -c Casks/arras.rb
           brew tap yashashwi-s/tap "$GITHUB_WORKSPACE"
           brew trust yashashwi-s/tap
+          # brew tap clones the checkout at HEAD, before the synchronized cask
+          # exists in a commit. Put the generated file in that tap clone so the
+          # audit checks this run's candidate instead of the old published cask.
+          tap_dir="$(brew --repository yashashwi-s/tap)"
+          cp Casks/arras.rb "$tap_dir/Casks/arras.rb"
           brew audit --cask --online yashashwi-s/tap/arras
           brew style Casks/arras.rb
           brew readall --aliases --syntax yashashwi-s/tap
