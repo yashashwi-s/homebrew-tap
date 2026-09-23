@@ -1,6 +1,6 @@
 cask "arras" do
-  version "2.4.7"
-  sha256 "3fc25bc82d775e8dccbd6ee4ab51717cfb2928ee0a666d489a326d2b69a74497"
+  version "2.4.9"
+  sha256 "d79b75ba9a21f8b7ab8c03418655827ea8ecdfaf132fd38bae34f73e0b6f2c49"
 
   url "https://github.com/yashashwi-s/Arras/releases/download/v#{version}/Arras.dmg"
   name "Arras"
